@@ -1,0 +1,100 @@
+package named
+
+func use(...any) {}
+
+func cond() bool { return false }
+
+func work() error { return nil }
+
+func single() (err error) { // want `function-scoped zero value err can be a named return`
+	if cond() {
+		err = work()
+	}
+	return err
+}
+
+func multi() (int, error) { // want `function-scoped zero value err can be a named return`
+	var err error
+	if cond() {
+		err = work()
+	}
+	return 0, err
+}
+
+var lit = func() (err error) { // want `function-scoped zero value err can be a named return`
+	if cond() {
+		err = work()
+	}
+	return err
+}
+
+func overwritten() error {
+	err := work() // want `err can be declared where it is assigned`
+	return err
+}
+
+func canonical() error {
+	if err := work(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func canonicalHoisted() error {
+	err := work()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func captured() error {
+	var err error
+	defer func() { use(err) }()
+	if cond() {
+		err = work()
+	}
+	return err
+}
+
+func notReturned() error {
+	var err error
+	if cond() {
+		err = work()
+	}
+	use(err)
+	return nil
+}
+
+func ambiguous() (error, error) {
+	var err error
+	if cond() {
+		err = work()
+	}
+	return err, nil
+}
+
+func alreadyNamed() (err error) {
+	err = work()
+	return err
+}
+
+func tighterScope() error {
+	if cond() {
+		var err error
+		if cond() {
+			err = work()
+		}
+		return err
+	}
+	return nil
+}
+
+func groupedErr() error { // want `function-scoped zero value err can be a named return`
+	var (
+		err error // want `2 adjacent declarations can be grouped into a var block`
+		n   int
+	)
+	use(n)
+	return err
+}

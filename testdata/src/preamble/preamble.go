@@ -1,0 +1,142 @@
+package preamble
+
+func use(...any) {}
+
+func f() int { return 1 }
+
+func funcStart() {
+	var (
+		n = f()
+		s string
+	)
+	use(n, s)
+}
+
+func forStart() {
+	for i := 0; i < 3; i++ {
+		var (
+			a = f()
+			b int
+		)
+		use(i, a, b)
+	}
+}
+
+func ifStart() {
+	if f() > 0 {
+		var (
+			a = f()
+			b int
+		)
+		use(a, b)
+	}
+}
+
+func caseStart() {
+	switch f() {
+	case 1:
+		var (
+			a = f()
+			b int
+		)
+		use(a, b)
+	default:
+		use(2)
+	}
+}
+
+func commStart() {
+	ch := make(chan int, 1)
+	ch <- 1
+	select {
+	case v := <-ch:
+		var (
+			a = f()
+			b int
+		)
+		use(v, a, b)
+	}
+}
+
+func dissolve() {
+	use(1)
+	var (
+		b []byte // want `var block outside the preamble can be dissolved into standalone declarations`
+		n        = f()
+		w any    = f()
+	)
+	use(b, n, w)
+}
+
+func stranded() {
+	use(1)
+	var (
+		a = f() // want `var block outside the preamble can be dissolved into standalone declarations`
+
+		// commentary attached to nothing
+
+		b int
+	)
+	use(a, b)
+}
+
+func docRides() {
+	use(1)
+	var (
+		a = f() // want `var block outside the preamble can be dissolved into standalone declarations`
+
+		// b holds the working set.
+		b []int
+	)
+	use(a, b)
+}
+
+func gapDrops() {
+	use(1)
+	var (
+		b []byte // want `var block outside the preamble can be dissolved into standalone declarations`
+
+		n = f()
+	)
+	use(b, n)
+}
+
+func blockMakeMid() {
+	use(1)
+	var (
+		m map[string]int // want `var block outside the preamble can be dissolved into standalone declarations`
+	)
+	m = make(map[string]int)
+	use(m)
+}
+
+func blockAfterBlock() {
+	var ( // want `2 adjacent declarations can be grouped into a var block`
+		a = f()
+	)
+	var (
+		b int
+	)
+	use(a, b)
+}
+
+func docSeparated() {
+	// a is documented.
+	var (
+		a = f()
+	)
+	var (
+		b int
+	)
+	use(a, b)
+}
+
+func forMid() {
+	for i := 0; i < 3; i++ {
+		use(i)
+		var (
+			a = f() // want `var block outside the preamble can be dissolved into standalone declarations`
+		)
+		use(a)
+	}
+}
