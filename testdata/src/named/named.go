@@ -14,12 +14,23 @@ func single() error { // want `function-scoped zero value err can be a named ret
 	return err
 }
 
-func multi() (int, error) { // want `function-scoped zero value err can be a named return`
+func multi() (int, error) {
 	var err error
 	if cond() {
 		err = work()
 	}
 	return 0, err
+}
+
+func multiAll() (int, error) { // want `function-scoped zero values can be named returns`
+	var (
+		n   int
+		err error
+	)
+	if cond() {
+		err = work()
+	}
+	return n, err
 }
 
 var lit = func() error { // want `function-scoped zero value err can be a named return`

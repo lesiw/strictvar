@@ -8,6 +8,15 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// cand is a function-scoped zero-value declaration whose type matches exactly
+// one unnamed result position and which is returned in that position.
+type cand struct {
+	gd  *ast.GenDecl
+	vs  *ast.ValueSpec
+	obj types.Object
+	idx int
+}
+
 // checkNamedReturns reports a zero-value declaration at the top of a function
 // body whose type matches exactly one unnamed result and which is returned in
 // that position. The declaration belongs in the signature as a named return.
@@ -46,6 +55,7 @@ func (f *file) checkFuncReturns(ft *ast.FuncType, body *ast.BlockStmt) {
 			return
 		}
 	}
+	var cands []cand
 	for _, stmt := range body.List {
 		ds, ok := stmt.(*ast.DeclStmt)
 		if !ok {
@@ -63,50 +73,54 @@ func (f *file) checkFuncReturns(ft *ast.FuncType, body *ast.BlockStmt) {
 			if len(vs.Names) != 1 || vs.Names[0].Name == "_" {
 				continue
 			}
-			f.checkReturnVar(ft, body, gd, vs)
+			if idx, ok := f.returnCand(ft, body, gd, vs); ok {
+				cands = append(cands, cand{gd: gd, vs: vs,
+					obj: f.pass.TypesInfo.Defs[vs.Names[0]], idx: idx})
+			}
 		}
 	}
+	// A zero-value declaration belongs in the signature only when every
+	// result position is produced by such a declaration. Naming one
+	// result of a multi-result function requires naming them all, and if
+	// any result is produced by an expression (a literal, a method call)
+	// rather than a declared zero value, there is nothing to name it for.
+	covered := make(map[int]struct{})
+	for _, c := range cands {
+		covered[c.idx] = struct{}{}
+	}
+	if len(covered) != len(ft.Results.List) {
+		return
+	}
+	f.reportNamedReturn(ft, cands)
 }
 
-func (f *file) checkReturnVar(ft *ast.FuncType, body *ast.BlockStmt, gd *ast.GenDecl, vs *ast.ValueSpec) {
-	var (
-		info = f.pass.TypesInfo
-		name = vs.Names[0]
-		obj  = info.Defs[name]
+// reportNamedReturn emits a single report for the function when every result
+// position is produced by a needless-declared zero-value variable. The fix
+// renames the results and removes the declarations; it is offered only for a
+// standalone single-result declaration, since naming one result of a
+// multi-result function requires naming them all.
+func (f *file) reportNamedReturn(ft *ast.FuncType, cands []cand) {
+	if len(ft.Results.List) == 1 {
+		f.reportNamedReturnSingle(ft, cands[0])
+		return
+	}
+	f.report(ft.Results.Pos(), ft.Results.End(),
+		"function-scoped zero values can be named returns",
+		"Name the return values", nil,
 	)
-	if obj == nil {
-		return
-	}
-	idx := -1
-	for i, field := range ft.Results.List {
-		rt := info.TypeOf(field.Type)
-		if rt == nil || !types.Identical(rt, obj.Type()) {
-			continue
-		}
-		if idx >= 0 {
-			return // ambiguous: matches more than one result
-		}
-		idx = i
-	}
-	if idx < 0 {
-		return
-	}
-	if !f.returnedAt(body, obj, idx) {
-		return
-	}
-	if f.capturedByFuncLit(body, obj) {
-		return
-	}
-	if f.overwrittenFirst(body, gd, obj) {
-		return
-	}
-	var edits []analysis.TextEdit
-	pos, end, ok := f.deleteLineSpan(gd)
-	fixable := ok && len(ft.Results.List) == 1 &&
-		gd.Lparen == token.NoPos && gd.Doc == nil
+}
+
+func (f *file) reportNamedReturnSingle(ft *ast.FuncType, c cand) {
+	var (
+		name         = c.vs.Names[0]
+		pos, end, ok = f.deleteLineSpan(c.gd)
+		fixable      = ok && len(ft.Results.List) == 1 &&
+			c.gd.Lparen == token.NoPos && c.gd.Doc == nil
+		edits []analysis.TextEdit
+	)
 	if fixable {
 		field := ft.Results.List[0]
-		edits = f.ownedEdits(gd, []analysis.TextEdit{{
+		edits = f.ownedEdits(c.gd, []analysis.TextEdit{{
 			Pos: field.Pos(),
 			End: field.End(),
 			NewText: []byte("(" + name.Name + " " +
@@ -118,6 +132,43 @@ func (f *file) checkReturnVar(ft *ast.FuncType, body *ast.BlockStmt, gd *ast.Gen
 		"function-scoped zero value "+name.Name+" can be a named return",
 		"Name the return value", edits,
 	)
+}
+
+// returnCand reports idx and ok=true when the zero-value declaration vs
+// matches exactly one result position of ft and is returned in that position.
+func (f *file) returnCand(ft *ast.FuncType, body *ast.BlockStmt, gd *ast.GenDecl, vs *ast.ValueSpec) (idx int, ok bool) {
+	var (
+		info = f.pass.TypesInfo
+		name = vs.Names[0]
+		obj  = info.Defs[name]
+	)
+	if obj == nil {
+		return 0, false
+	}
+	idx = -1
+	for i, field := range ft.Results.List {
+		rt := info.TypeOf(field.Type)
+		if rt == nil || !types.Identical(rt, obj.Type()) {
+			continue
+		}
+		if idx >= 0 {
+			return 0, false // ambiguous: matches more than one result
+		}
+		idx = i
+	}
+	if idx < 0 {
+		return 0, false
+	}
+	if !f.returnedAt(body, obj, idx) {
+		return 0, false
+	}
+	if f.capturedByFuncLit(body, obj) {
+		return 0, false
+	}
+	if f.overwrittenFirst(body, gd, obj) {
+		return 0, false
+	}
+	return idx, true
 }
 
 // overwrittenFirst reports whether the first statement using obj after its
