@@ -1,0 +1,9 @@
+package inline
+
+func work() int { return 1 }
+
+var (gOne = work())
+
+var (
+	gTwo = work() // want "merged into the var block on line 5"
+)
