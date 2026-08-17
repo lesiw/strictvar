@@ -7,13 +7,8 @@
 [![Discord](https://img.shields.io/discord/1145827224516300971?logo=discord&logoColor=white&color=5865F2&label=discord)](https://lesiw.dev/discord)
 [![License](https://img.shields.io/github/license/lesiw/strictvar)](../LICENSE)
 
-An `analysis.Analyzer` that reduces the number of ways a variable may
-be declared.
-
-There are too many ways to declare a variable in Go. `strictvar`
-makes the choice mechanical: zero values are declared with `var`,
-everything else with `:=`, and declarations that can collapse into
-less syntax do.
+An experimental analyzer for those who believe there are too many
+ways to declare a variable in Go.
 
 `strictvar` is a formatter with type information. Whether a
 declaration carries a zero value is invisible to syntax alone, so
