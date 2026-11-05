@@ -64,6 +64,7 @@ func TestSingleUseStrings(t *testing.T) {
 func TestSuggestedFixes(t *testing.T) {
 	analysistest.RunWithSuggestedFixes(t, testdataDir(t),
 		Analyzer, "zero", "group", "block", "named", "makedecl", "preamble",
+		"iife",
 	)
 }
 

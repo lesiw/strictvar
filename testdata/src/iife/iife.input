@@ -1,0 +1,45 @@
+package iife
+
+var shadowing = func() string { // want `package-level IIFE can be var plus func init`
+	shadowing, err := getwd()
+	if err != nil {
+		panic(err)
+	}
+	return shadowing
+}()
+
+func getwd() (string, error) { return "", nil }
+
+var branches = func() int { // want `package-level IIFE can be var plus func init`
+	if positive() {
+		return 1
+	}
+	return -1
+}()
+
+func positive() bool { return true }
+
+var field = func() int { // want `package-level IIFE can be var plus func init`
+	type record struct{ field int }
+	r := record{field: 1}
+	return r.field
+}()
+
+func use() (string, int) { return shadowing, taken1 }
+
+const taken1 = 1
+
+var taken = func() int { // want `package-level IIFE can be var plus func init`
+	taken := one()
+	return taken
+}()
+
+func one() int { return 1 }
+
+var switched = func() any {
+	switch switched := any(1).(type) {
+	case int:
+		return switched
+	}
+	return nil
+}()
