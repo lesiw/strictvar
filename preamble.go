@@ -168,11 +168,8 @@ func (f *file) reportStrayBlock(gd *ast.GenDecl) {
 	if len(gd.Specs) > 0 {
 		pos, end = gd.Specs[0].Pos(), gd.Specs[0].End()
 	}
-	f.report(pos, end,
-		"var block outside the preamble can be dissolved into "+
-			"standalone declarations",
-		"Dissolve the block", edits,
-	)
+	msg := "var block outside the preamble can be dissolved into " + "standalone declarations"
+	f.report(pos, end, msg, "Dissolve the block", edits)
 }
 
 // dissolveEdits rebuilds a block as standalone declarations, one per spec.

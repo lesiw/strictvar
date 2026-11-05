@@ -355,7 +355,8 @@ func (f *file) checkTypeElision(decl *ast.GenDecl, vs *ast.ValueSpec) {
 	f.report(vs.Pos(), vs.End(),
 		"redundant type can be elided: "+vs.Names[0].Name+" = "+
 			f.text(vs.Values[0].Pos(), vs.Values[0].End()),
-		"Elide the type", edits)
+		"Elide the type", edits,
+	)
 }
 
 // ownedEdits withholds a fix from a declaration another rule is rewriting: two

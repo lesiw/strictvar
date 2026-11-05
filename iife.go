@@ -160,7 +160,8 @@ func (f *file) iifeEdits(gd *ast.GenDecl, vs *ast.ValueSpec, lit *ast.FuncLit) [
 		Pos: vs.Names[0].End(),
 		End: value.End(),
 		NewText: []byte(" " +
-			f.text(field.Type.Pos(), field.Type.End())),
+			f.text(field.Type.Pos(), field.Type.End()),
+		),
 	}, {
 		Pos:     gd.End(),
 		End:     gd.End(),

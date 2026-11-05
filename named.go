@@ -75,7 +75,8 @@ func (f *file) checkFuncReturns(ft *ast.FuncType, body *ast.BlockStmt) {
 			}
 			if idx, ok := f.returnCand(ft, body, gd, vs); ok {
 				cands = append(cands, cand{gd: gd, vs: vs,
-					obj: f.pass.TypesInfo.Defs[vs.Names[0]], idx: idx})
+					obj: f.pass.TypesInfo.Defs[vs.Names[0]], idx: idx},
+				)
 			}
 		}
 	}

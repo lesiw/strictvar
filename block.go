@@ -115,8 +115,8 @@ func (f *file) checkBlockPairs(gd *ast.GenDecl) {
 		}}
 	}
 	f.report(firstDup.Pos(), firstDup.End(),
-		"zero-value declarations of the same type can be combined: "+
-			msg, "Combine the declarations", edits,
+		"zero-value declarations of the same type can be combined: "+msg,
+		"Combine the declarations", edits,
 	)
 }
 

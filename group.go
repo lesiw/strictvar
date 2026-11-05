@@ -361,8 +361,8 @@ func (f *file) reportZeroRun(group []*ast.GenDecl) {
 		}}
 	}
 	f.report(last.Pos(), last.End(),
-		"zero-value declarations of the same type can be combined: "+
-			combined, "Combine the declarations", edits,
+		"zero-value declarations of the same type can be combined: "+combined,
+		"Combine the declarations", edits,
 	)
 }
 
