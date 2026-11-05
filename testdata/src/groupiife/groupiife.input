@@ -1,0 +1,8 @@
+package groupiife
+
+var one = 1 // want `2 adjacent var declarations can be grouped into a var block`
+
+var two = func() int {
+	n := 1
+	return n
+}()

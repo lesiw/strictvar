@@ -237,11 +237,17 @@ func (f *file) reportRun(run []declItem) {
 	if f.strayComments(first.Pos(), f.lineEnd(last.End()), kept) {
 		return
 	}
+	edits := f.runMergeEdits(run)
+	if edits != nil {
+		for _, it := range run {
+			f.owned[it.decl] = struct{}{}
+		}
+	}
 	kind := first.Tok.String()
 	f.report(first.Pos(), last.End(), fmt.Sprintf(
 		"%d adjacent %s declarations can be grouped into a %s block",
 		len(run), kind, kind,
-	), "Group the declarations into one block", f.runMergeEdits(run))
+	), "Group the declarations into one block", edits)
 }
 
 // runMergeEdits builds the block replacing a run of declarations. Trailing

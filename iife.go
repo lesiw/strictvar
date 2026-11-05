@@ -36,10 +36,13 @@ func (f *file) checkIIFE() {
 }
 
 func (f *file) checkIIFEValue(gd *ast.GenDecl, vs *ast.ValueSpec) {
-	var (
-		value    = vs.Values[0]
-		call, ok = value.(*ast.CallExpr)
-	)
+	if _, claimed := f.owned[gd]; claimed {
+		// A grouping rule is rewriting this declaration. The rewritten
+		// form is checked on the next pass.
+		return
+	}
+	value := vs.Values[0]
+	call, ok := value.(*ast.CallExpr)
 	if !ok || len(call.Args) != 0 {
 		return
 	}
