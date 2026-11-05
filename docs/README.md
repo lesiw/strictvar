@@ -324,9 +324,9 @@ func init() {
   `var x = f()`.
 - A local declared with the variable's name is renamed to the next free
   number (`x` becomes `x1`) so the assignment does not write the local.
-- The fix is withheld when another package-level initializer names the
-  variable directly, since it would see the zero value after the move. A
-  read through a function call is not detected.
+- Nothing is reported when another var depends on the variable, since it
+  would see the zero value after the move. A read through a function call
+  is not detected.
 
 ### String content lives at its reader
 

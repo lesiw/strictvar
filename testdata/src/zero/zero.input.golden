@@ -85,8 +85,9 @@ func init() { // want `package-level IIFE can be var plus func init`
 
 func f2() int { return 2 }
 
-// dependent reads another package variable.
-var dependent = func() int { // want `package-level IIFE can be var plus func init`
+// dependent reads another package variable. A sibling initializer
+// reads it, so it cannot move into init.
+var dependent = func() int {
 	n := f2()
 	return n + 1
 }()

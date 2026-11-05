@@ -261,7 +261,7 @@ func (f *file) iifeEdits(gd *ast.GenDecl, vs *ast.ValueSpec, lit *ast.FuncLit) (
 		// Package variables initialize before any init runs, so a
 		// sibling initializer reading this variable would see the zero
 		// value after the move.
-		return nil, true
+		return nil, false
 	}
 	last := lit.Body.List[len(lit.Body.List)-1]
 	var bad bool
