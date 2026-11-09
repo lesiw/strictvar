@@ -1,3 +1,6 @@
+> [!NOTE]
+> This repository has moved to [lesiw.io/tools/analyzers/strictvar](https://github.com/lesiw/tools/tree/main/analyzers/strictvar).
+
 # lesiw.io/strictvar
 
 [![Go Reference](https://pkg.go.dev/badge/lesiw.io/strictvar.svg)](https://pkg.go.dev/lesiw.io/strictvar)
